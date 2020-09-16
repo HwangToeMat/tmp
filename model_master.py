@@ -17,6 +17,7 @@ from PIL import Image
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dtaidistance import dtw
+from google.cloud import storage
 
 """
 
@@ -36,7 +37,7 @@ def alphapose_vid(video):
     os.system(scr)
     video_json = [out_img + '/' + video.split('/')[-1].split('.')[0] + '.json']
     video_sk = [out_img + '/' + video.split('/')[-1]]
-    return video_sk, video_json
+    return video_sk, video_jsonz`
 
 
 # 이미지를 넣어 알파포즈 돌리기 // cap_sk: [path,...], cap_json: [dict,...]
@@ -105,6 +106,8 @@ def l2_normalize(jsonfile):  # 알파포즈에서 리턴된 json파일에서 l2_
 def cos_sim(cap_json_l2, video_json_l2, video, video_json, cap_score):
     capscore_list, cap_list = [], []
     ip_data = video_json_l2
+    cap_score = list(
+        map(lambda x: int(x.strip()), cap_score.rstrip(']').lstrip('[').split(',')))
 
     for idx, label in enumerate(cap_json_l2):
 
@@ -335,6 +338,25 @@ def dtw_compare(pro_json_l2, stu_json_l2):  # 두 비디오의 l2_json 파일을
     return score_json
 
 
+def download_blob(bucket_name, source_blob_name, destination_file_name):
+    """Downloads a blob from the bucket."""
+    # bucket_name = "your-bucket-name"
+    # source_blob_name = "storage-object-name"
+    # destination_file_name = "local/path/to/file"
+
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    print(
+        "Blob {} downloaded to {}.".format(
+            source_blob_name, destination_file_name
+        )
+    )
+
+
 app = Flask(__name__)
 CORS(app)
 
@@ -345,6 +367,10 @@ def professor():
         video = request.args.get('video', '')
         cap_list = request.args.get('capture', '')
         cap_score = request.args.get('score', '')
+        download_blob(
+            '1ok_demo', 'lecture01/assignment00/prof/TKD_test.mp4', 'data/video')
+        download_blob(
+            '1ok_demo', 'lecture01/assignment00/prof/TKD_slow.mp4', 'data/image')
         video_sk, video_json = alphapose_vid(video)
         cap_sk, cap_json = alphapose_img(cap_list)
         video_json_l2 = l2_normalize(video_json)
