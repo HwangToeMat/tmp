@@ -37,7 +37,7 @@ def alphapose_vid(video):
     os.system(scr)
     video_json = [out_img + '/' + video.split('/')[-1].split('.')[0] + '.json']
     video_sk = [out_img + '/' + video.split('/')[-1]]
-    return video_sk, video_jsonz`
+    return video_sk, video_jsonz
 
 
 # 이미지를 넣어 알파포즈 돌리기 // cap_sk: [path,...], cap_json: [dict,...]
@@ -106,8 +106,7 @@ def l2_normalize(jsonfile):  # 알파포즈에서 리턴된 json파일에서 l2_
 def cos_sim(cap_json_l2, video_json_l2, video, video_json, cap_score):
     capscore_list, cap_list = [], []
     ip_data = video_json_l2
-    cap_score = list(
-        map(lambda x: int(x.strip()), cap_score.rstrip(']').lstrip('[').split(',')))
+    cap_score = int(cap_score)
 
     for idx, label in enumerate(cap_json_l2):
 
@@ -173,7 +172,7 @@ def cos_sim(cap_json_l2, video_json_l2, video, video_json, cap_score):
             try:
                 ret, frame = cap.read()
                 if fr_iter == int(highlight.split('.')[0]):  # 점수에 따라 색칠하기
-                    sk_sc = cap_score[idx]
+                    sk_sc = cap_score
                     ck = [0, 0, 0, 0]
                     x, y = 0, 0
                     for _ in range(4):  # head
@@ -338,7 +337,7 @@ def dtw_compare(pro_json_l2, stu_json_l2):  # 두 비디오의 l2_json 파일을
     return score_json
 
 
-def download_blob(bucket_name, source_blob_name, destination_file_name):
+def download_blob(bucket_name='1ok_demo', source_blob_name, destination_file_name):
     """Downloads a blob from the bucket."""
     # bucket_name = "your-bucket-name"
     # source_blob_name = "storage-object-name"
@@ -377,7 +376,8 @@ def professor():
         cap_json_l2 = l2_normalize(cap_json)
         prof_json = {'video_json': video_json, 'video_json_l2': video_json_l2, 'video_sk': video_sk,
                      'cap_json': cap_json, 'cap_json_l2': cap_json_l2, 'cap_sk': cap_sk, 'cap_score': cap_score}
-        return prof_json
+        # prof.json으로 버킷에 저장
+        return prof_json  # http respone
 
 
 @app.route('/student', methods=['GET'])
